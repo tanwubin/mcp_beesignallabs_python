@@ -30,7 +30,7 @@ def get_base_url():
     if is_direct_run:
         try:
             parser = argparse.ArgumentParser(description="新闻MCP服务")
-            parser.add_argument('--url', type=str, default="http://news.212138.xyz",
+            parser.add_argument('--url', type=str, default="https://newsnow.busiyi.world/",
                                help='新闻API的基础URL')
             args, _ = parser.parse_known_args()  # 使用parse_known_args忽略未知参数
             return args.url
@@ -38,7 +38,7 @@ def get_base_url():
             logging.warning(f"解析命令行参数失败: {e}")
     
     # 默认URL
-    return "http://news.212138.xyz"
+    return "https://newsnow.busiyi.world/"
 
 # 获取基础URL
 BASE_URL = get_base_url()

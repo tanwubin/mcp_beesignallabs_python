@@ -1,10 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "mcp-newsnow"
-version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-    "httpx>=0.28.1",
-    "mcp[cli]>=1.6.0",
+version = "0.1.2"
+authors = [
+    {name = "Alixy", email = "bradleylzh@gmail.com"},
 ]
+description = "MCP server for multi-platform hottest news"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "mcp>=1.0.0",
+    "httpx>=0.25.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/sligter/mcp_newsnow"
+"Bug Tracker" = "https://github.com/sligter/mcp_newsnow/issues"
+
+[project.scripts]
+mcp-newsnow = "mcp_newsnow_server.cli:main"
