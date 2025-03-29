@@ -24,13 +24,13 @@ def get_base_url():
         return env_url
     
     # 检测脚本运行方式
-    is_direct_run = len(sys.argv) > 0 and Path(sys.argv[0]).name == 'get_news.py'
+    is_direct_run = len(sys.argv) > 0 and Path(sys.argv[0]).name == 'server.py'
     
     # 如果是直接运行脚本，则解析命令行参数
     if is_direct_run:
         try:
             parser = argparse.ArgumentParser(description="新闻MCP服务")
-            parser.add_argument('--url', type=str, default="https://newsnow.busiyi.world/",
+            parser.add_argument('--url', type=str, default="https://newsnow.busiyi.world",
                                help='新闻API的基础URL')
             args, _ = parser.parse_known_args()  # 使用parse_known_args忽略未知参数
             return args.url
@@ -38,7 +38,7 @@ def get_base_url():
             logging.warning(f"解析命令行参数失败: {e}")
     
     # 默认URL
-    return "https://newsnow.busiyi.world/"
+    return "https://newsnow.busiyi.world"
 
 # 获取基础URL
 BASE_URL = get_base_url()
