@@ -8,10 +8,8 @@
 
 - **多平台热点聚合**：一站式获取来自酷安、知乎、微博、B站、抖音、GitHub等14+平台的热点内容
 - **中英文源名识别**：支持中英文新闻源名称，并提供模糊匹配功能
-- **并发请求优化**：使用异步并发技术，高效获取多源新闻
 - **自定义API端点**：通过环境变量或命令行参数配置NewNow API端点
-- **智能错误处理**：全面的错误报告和优雅降级机制
-- **LLM友好输出**：专为大型语言模型设计的输出格式
+
 
 ## 安装方法
 
@@ -60,7 +58,7 @@ uv pip install mcp-newsnow
 
 ```bash
 # 通过环境变量设置API端点
-NEWS_API_URL=https://newsnow.example.com mcp dev server.py
+NEWS_API_URL=https://newsnow.example.com
 
 # 运行测试
 mcp test server.py
