@@ -2,7 +2,7 @@
 
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-blue)](https://github.com/anthropics/anthropic-tools)
 
-一个基于 Model Context Protocol (MCP) 的新闻聚合服务器，通过 [NewNow](https://github.com/ourongxing/newsnow) API 提供多平台热点新闻和趋势话题。
+一个基于 Model Context Protocol (MCP) 的新闻聚合服务器，通过 [Newsnow](https://github.com/ourongxing/newsnow) API 提供多平台热点新闻和趋势话题。
 
 ## 功能特点
 
@@ -114,7 +114,7 @@ async def list_sources() -> dict[str, str]
 
 ## 环境变量
 
-- `NEWS_API_URL`: NewNow API的基础URL (默认: "https://newsnow.busiyi.world/")
+- `NEWS_API_URL`: Newsnow API的基础URL (默认: "https://newsnow.busiyi.world/")
 
 ## 支持的新闻源
 
