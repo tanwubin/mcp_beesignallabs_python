@@ -7,6 +7,7 @@ import httpx
 from typing import Any
 import asyncio
 import datetime
+import json
 
 from mcp.server.fastmcp import FastMCP
 
@@ -177,7 +178,7 @@ class NewsManager:
             }
         
         headers = {
-            "Accept": "application/geo+json"
+            "Accept": "application/json"
         }
         try:
             async with httpx.AsyncClient(timeout=300.0) as client:  # 设置300秒超时
@@ -185,27 +186,19 @@ class NewsManager:
                     logger.debug(f"正在获取新闻，来源: {normalized_source} (原输入: {source})")
                     response = await client.get(self.base_url+f"/api/s?id={normalized_source}&latest", headers=headers)
                     response.raise_for_status()
-                    data = response.json()
-                    # 缓存结果
-                    self.news_cache[normalized_source] = data
-                    # 提取标题存储到最新头条
-                    if data and "features" in data:
-                        for item in data["features"]:
-                            if "properties" in item and "title" in item["properties"]:
-                                self.latest_headlines.append(item["properties"]["title"])
-                    return data
+                    return response.text
                 except httpx.TimeoutException:
                     logger.error(f"获取新闻超时: {normalized_source}")
-                    return {"error": "timeout", "message": f"获取新闻源 {normalized_source} 超时"}
+                    return f"获取新闻源 {normalized_source} 超时"
                 except httpx.HTTPStatusError as e:
                     logger.error(f"HTTP错误: {str(e)}")
-                    return {"error": "http_error", "message": f"HTTP错误: {e.response.status_code}", "details": str(e)}
+                    return f"HTTP错误: {e.response.status_code} - {str(e)}"
                 except Exception as e:
                     logger.error(f"获取新闻时出错: {str(e)}")
-                    return {"error": "unknown_error", "message": str(e)}
+                    return f"未知错误: {str(e)}"
         except Exception as e:
             logger.error(f"创建HTTP客户端时出错: {str(e)}")
-            return {"error": "client_error", "message": str(e)}
+            return f"客户端错误: {str(e)}"
 
     async def fetch_multi_sources(self, sources: list[str]) -> dict[str, Any]:
         """从多个来源获取新闻"""
@@ -223,25 +216,26 @@ class NewsManager:
                 
             logger.debug(f"批量获取新闻，处理来源: {normalized_source} (原输入: {source})")
             result = await self.fetch_news(normalized_source)
-            if result:
+            
+            try:
+                # 如果result是JSON字符串，先解析成Python对象
+                if isinstance(result, str) and (result.startswith('{') or result.startswith('[')):
+                    parsed_result = json.loads(result)
+                    results[normalized_source] = parsed_result
+                else:
+                    results[normalized_source] = result
+            except Exception as e:
+                logger.warning(f"解析结果失败，使用原始文本: {str(e)}")
                 results[normalized_source] = result
         
-        # 如果所有源都未知，返回可用源列表
+        # 如果所有源都未知，返回一个字符串而不是对象
         if not results and unknown_sources:
-            return {
-                "error": "unknown_sources",
-                "message": f"未知的新闻源: {', '.join(unknown_sources)}",
-                "available_sources": self.get_available_sources_formatted()
-            }
-            
-        # 如果部分源未知，添加警告信息
+            return f"未知的新闻源: {', '.join(unknown_sources)}\n{self.get_available_sources_formatted()}"
+        
+        # 如果有部分未知源，添加警告信息
         if unknown_sources:
-            results["warnings"] = {
-                "unknown_sources": unknown_sources,
-                "message": f"以下新闻源无法识别: {', '.join(unknown_sources)}",
-                "available_sources": self.get_available_sources_formatted()
-            }
-            
+            results["warnings"] = f"以下新闻源无法识别: {', '.join(unknown_sources)}"
+        
         return results
     
     def get_headlines(self) -> str:
@@ -265,15 +259,12 @@ async def get_newsnow(source: str) -> dict[str, Any] | None:
     return await news_mgr.fetch_news(source)
 
 @mcp.tool()
-async def get_multi_news(sources: list[str] = None) -> dict[str, Any]:
+async def get_multi_news(sources: list[str] = None) -> str:
     """从多个源获取最新新闻"""
-    if sources is None or len(sources) == 0:
-        sources = sources_list[:5]  # 默认使用前5个源
-    else:
-        # 限制查询数量，避免请求过多
-        sources = sources[:5]  # 最多查询5个源
+    # 获取原始结果
+    results = await news_mgr.fetch_multi_sources(sources)
     
-    return await news_mgr.fetch_multi_sources(sources)
+    return json.dumps(results, ensure_ascii=False)
 
 @mcp.tool()
 async def get_all_news() -> dict[str, Any]:
@@ -302,7 +293,7 @@ async def get_all_news() -> dict[str, Any]:
                     return source, result
             except Exception as e:
                 logger.error(f"获取新闻源 {source} 时出错: {str(e)}")
-                return source, {"error": "fetch_error", "message": str(e)}
+                return source, f"获取错误: {str(e)}"
         
         # 逐个处理源，而不是使用gather
         for source in sources_list:
@@ -312,44 +303,18 @@ async def get_all_news() -> dict[str, Any]:
                 result = await fetch_with_timeout(source)
                 if isinstance(result, tuple):
                     src, data = result
-                    if isinstance(data, dict) and "error" in data:
-                        errors.append({"source": src, **data})
-                    else:
-                        all_results[src] = data
+                    all_results[src] = data
                 else:
-                    errors.append({"source": source, "error": "unknown_result", "message": f"意外的结果类型: {type(result)}"})
+                    all_results[source] = f"意外的结果类型: {type(result)}"
             except Exception as e:
                 logger.error(f"处理源 {source} 时出现异常: {str(e)}")
-                errors.append({"source": source, "error": "processing_error", "message": str(e)})
-        
-        # 添加错误信息
-        if errors:
-            all_results["errors"] = errors
-        
-        # 添加元数据
-        successful_count = len(all_results) 
-        # 减去非新闻源数据的键
-        for non_source in ["errors", "warnings", "meta"]:
-            if non_source in all_results:
-                successful_count -= 1
-                
-        all_results["meta"] = {
-            "total_sources": total_sources,
-            "successful_sources": successful_count,
-            "timestamp": datetime.datetime.now().isoformat(),
-        }
+                all_results[source] = f"处理错误: {str(e)}"
         
         return all_results
     except Exception as e:
         # 捕获所有可能的错误并返回友好的错误信息
         logger.error(f"获取所有新闻源时发生错误: {str(e)}")
-        return {
-            "error": "tool_execution_error",
-            "message": f"执行get_all_news工具时出错: {str(e)}",
-            "meta": {
-                "timestamp": datetime.datetime.now().isoformat()
-            }
-        }
+        return f"执行get_all_news工具时出错: {str(e)}"
 
 @mcp.tool()
 async def list_sources() -> dict[str, str]:
@@ -382,7 +347,7 @@ async def sources() -> str:
 @mcp.prompt()
 async def news_summary(source: str) -> str:
     """获取特定源的新闻总结提示"""
-    return f"请帮我总结来自{source}的最新新闻，分析其中的重要事件和趋势，并给出访问链接。"
+    return f"请帮我总结来自{source}的最新新闻，并给出访问链接。"
 
 @mcp.prompt()
 async def multi_news_summary(sources: str = "") -> str:
