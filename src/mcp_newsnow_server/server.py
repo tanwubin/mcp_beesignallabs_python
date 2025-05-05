@@ -31,7 +31,7 @@ def get_base_url():
     if is_direct_run:
         try:
             parser = argparse.ArgumentParser(description="新闻MCP服务")
-            parser.add_argument('--url', type=str, default="https://newsnow.busiyi.world",
+            parser.add_argument('--url', type=str, default="https://www.beesignallabs.com",
                                help='新闻API的基础URL')
             args, _ = parser.parse_known_args()  # 使用parse_known_args忽略未知参数
             return args.url
@@ -39,7 +39,7 @@ def get_base_url():
             logging.warning(f"解析命令行参数失败: {e}")
     
     # 默认URL
-    return "https://newsnow.busiyi.world"
+    return "https://www.beesignallabs.com"
 
 # 获取基础URL
 BASE_URL = get_base_url()
@@ -109,7 +109,7 @@ SOURCE_MAPPINGS = {
 }
 
 # 初始化 FastMCP 服务器
-mcp = FastMCP("newsnow")
+mcp = FastMCP("beesignallabs")
 
 class NewsManager:
     def __init__(self, base_url):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-命令行入口点，用于运行 MCP NewNow 服务器
+命令行入口点，用于运行 MCP beesignallabs 服务器
 """
 import sys
 import logging
@@ -16,7 +16,7 @@ logging.basicConfig(
 def main():
     """主函数，运行MCP服务器"""
     try:
-        print("启动 MCP NewNow 服务器...", file=sys.stderr)
+        print("启动 MCP beesignallabs 服务器...", file=sys.stderr)
         # 运行服务器
         mcp.run(transport='stdio')
     except Exception as e:
