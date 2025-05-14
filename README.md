@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/sligter-mcp-newsnow-badge.png)](https://mseep.ai/app/sligter-mcp-newsnow)
+
 # MCP NewNow Server
 
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-blue)](https://github.com/anthropics/anthropic-tools)
