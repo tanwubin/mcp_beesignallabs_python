@@ -181,7 +181,7 @@ class NewsManager:
             "Accept": "application/json"
         }
         try:
-            async with httpx.AsyncClient(timeout=300.0) as client:  # 设置300秒超时
+            async with httpx.AsyncClient(timeout=300.0, verify=False) as client:  # 设置300秒超时
                 try:
                     logger.debug(f"正在获取新闻，来源: {normalized_source} (原输入: {source})")
                     response = await client.get(self.base_url+f"/api/s?id={normalized_source}&latest", headers=headers)
